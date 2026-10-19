@@ -1,21 +1,14 @@
 import { assign, createActor, emit, fromPromise, setup, toPromise } from "xstate";
 import recipeThreadAgent from '../writer/writer'
-import OpenAI from "openai";
+import { openai, MODEL } from '../../llm';
 
 const DELAY = 2000
-const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-const openai = new OpenAI({
-  apiKey,
-  // Running in browser due to lack of support in xstate inspector for nodejs environment
-  // Risks to api key mitigated via vite environment variables
-  dangerouslyAllowBrowser: true
-});
 
 const machine = setup({
   actors: {
     planningAgent: fromPromise(async ({ input }) => {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: MODEL,
         messages: [
           { role: 'system', content: 'Your mission is to deliver a meal to a customer by coordinating actions using the tools available. You must start by creating a detailed execution plan to accomplish the goal. Each tool must be invoked once and only once, in the appropriate sequence based on your execution plan. Only one tool must be called at a time. Do not invoke the next tool until the previous has returned a result. Execute the `done` tool last.' },
           ...input.threadMessages,
@@ -74,7 +67,7 @@ const machine = setup({
     }),
     summarizationAgent: fromPromise(async ({ input }) => {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: MODEL,
         messages: [{ role: 'system', content: `Pitch <Input> to the humans like your life depends on it. <Input>${JSON.stringify(input)}</Input> {}` }],
       })
       await new Promise(resolve => setTimeout(resolve, DELAY));

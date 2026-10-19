@@ -1,13 +1,6 @@
 import { assign, setup, fromPromise, emit, createActor, createMachine, toPromise, sendTo, spawnChild } from 'xstate';
 import { createBrowserInspector } from '@statelyai/inspect';
-import OpenAI from "openai";
-const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-const openai = new OpenAI({
-  apiKey,
-  // Running in browser due to lack of support in xstate inspector for nodejs environment
-  // Risks to api key mitigated via vite environment variables
-  dangerouslyAllowBrowser: true
-});
+import { openai, MODEL } from '../../llm';
 
 const { inspect } = createBrowserInspector();
 export const machine = setup({
@@ -48,7 +41,7 @@ export const machine = setup({
   actors: {
     create_state_machine: fromPromise(async ({ input }) => {
       const completion = await openai.chat.completions.create({
-        model: "gpt-o1",
+        model: MODEL,
         messages: input.messages
       })
       console.log(completion.choices[0].message.content)

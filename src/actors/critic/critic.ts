@@ -1,13 +1,6 @@
 import { assign, createActor, setup, fromCallback, fromPromise, sendTo } from 'xstate';
 
-import OpenAI from "openai";
-const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-const openai = new OpenAI({
-  apiKey,
-  // Running in browser due to lack of support in xstate inspector for nodejs environment
-  // Risks to api key mitigated via vite environment variables
-  dangerouslyAllowBrowser: true 
-});
+import { openai, MODEL } from '../../llm';
 
 const machine = setup({
     types: {
@@ -22,7 +15,7 @@ const machine = setup({
     actors: {
         recipe_critic: fromPromise(async ({ input }) => {
             const completion = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+                model: MODEL,
                 messages: input.threadMessages
             })
             console.log(completion.choices[0].message)

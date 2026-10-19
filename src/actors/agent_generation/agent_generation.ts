@@ -1,12 +1,5 @@
 import { setup, assign, createMachine, fromPromise } from "xstate";
-import OpenAI from "openai";
-const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-const openai = new OpenAI({
-    apiKey,
-    // Running in browser due to lack of support in xstate inspector for nodejs environment
-    // Risks to api key mitigated via vite environment variables
-    dangerouslyAllowBrowser: true
-});
+import { openai, MODEL } from '../../llm';
 const DELAY = 0
 export const machine = setup({
     types: {
@@ -27,7 +20,7 @@ export const machine = setup({
             console.log('createEvents')
             console.log('INPUT', input)
             const completion = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+                model: MODEL,
                 messages: [
                     { role: 'system', content: 'You are leading an event storming exercise. Your job is to understand fully the provided domain by listing every possible event within the bounded context. Use DDD language. Events should be of the fomat [NOUN]_[PAST TENSE VERB].' },
                     { role: 'system', content: 'The output must be valid typescript types definition. Do not output any headers or other text. Do not output ```. Only output the code.' },
@@ -49,7 +42,7 @@ type Events =
             console.log('createStates')
             console.log('INPUT', input)
             const completion = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+                model: MODEL,
                 messages: [
                     { role: 'system', content: 'You are a state machine designer. The user will provide you with a list of domain events in <Domain Events> that occur in a given system. Based on these events, produce a set of states and transitions for a state machine configuration. The state machine should start from an initial state, Include all relevant states implied by the events, Clearly model transitions triggered by these domain events, Be ordered logically based on common workflows, Include any terminal or final states if applicable.' },
                     { role: 'system', content: 'The output must be valid typescript. Do not output any headers or other text. Do not output ```. Only output the code.' },
@@ -64,7 +57,7 @@ type Events =
             console.log('createContext')
             console.log('INPUT', input)
             const completion = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+                model: MODEL,
                 messages: [
                     { role: 'system', content: 'You are a software engineer. The user will provide you with a goal, and your task is to define a data model as a TypeScript object type named Context that includes all the relevant bits of persistent data in the domain. Include only the properties that would be logically required for an AI agent to achieve the given goal. Do not include any extraneous data. Consider what the agent will need to know: initial inputs, intermediate data, results of computations, references to external data sources, and final outputs.' },
                     { role: 'system', content: 'The output must be valid typescript types definition. Do not output any headers or other text. Do not output ```. Only output the code.' },
@@ -88,14 +81,14 @@ type Context = {
             console.log('createActors')
             console.log('INPUT', input)
             const completion = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+                model: MODEL,
                 messages: [
                     { role: 'system', content: 'You are a software engineer. The user will provide you with their goal, and you will define a list of functions invoking API services in our enterprise that enable accomplishing the goal. Do not output any description or markdown only output code.' },
                     { role: 'system', content: `# Example:
                         const actorAskChatGPT = fromPromise(async (args) => {
                             const prompt = "Tell me a joke about: " + args.topic
                             const completion = await openai.chat.completions.create({
-                                model: "gpt-4o-mini",
+                                model: MODEL,
                                 messages: [
                                     { role: 'system', content: prompt }
                                 ]
